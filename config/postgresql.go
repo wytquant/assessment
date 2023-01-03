@@ -19,7 +19,7 @@ func InitPostgresDB() error {
 	return nil
 }
 
-func CloseDB() {
+func CloseDB() error {
 	sqlDB, _ := DB.DB()
-	sqlDB.Close()
+	return sqlDB.Close()
 }
