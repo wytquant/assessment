@@ -4,6 +4,7 @@ package handlers_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -108,5 +109,62 @@ func TestCreateExpenseHandler(t *testing.T) {
 
 		//assert
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
+func TestGetExpenseByIDHandler(t *testing.T) {
+	t.Run("success case", func(t *testing.T) {
+		//arrange
+		id := "1"
+		want := responses.ExpenseResponse{
+			ID:     1,
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+
+		expenseService := services.NewExpenseServiceMock()
+		expenseService.On("GetExpenseByID", id).Return(&want, nil)
+
+		expenseHandler := handlers.NewExpenseHandler(expenseService)
+
+		r := gin.Default()
+		r.GET("/expenses/:id", expenseHandler.GetExpenseByID)
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/expenses/%s", id), nil)
+
+		//act
+		r.ServeHTTP(w, req)
+		var got responses.ExpenseResponse
+		json.NewDecoder(w.Body).Decode(&got)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		if !assert.ObjectsAreEqual(want, got) {
+			t.Errorf("not equal. want: %#v, got: %#v", want, got)
+		}
+
+	})
+
+	t.Run("fail case record not found", func(t *testing.T) {
+		//arrange
+		id := "1"
+
+		expenseService := services.NewExpenseServiceMock()
+		expenseService.On("GetExpenseByID", id).Return(&responses.ExpenseResponse{}, helpers.NewNotFoundError())
+
+		expenseHandler := handlers.NewExpenseHandler(expenseService)
+
+		r := gin.Default()
+		r.GET("/expenses/:id", expenseHandler.GetExpenseByID)
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/expenses/%s", id), nil)
+
+		//act
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }

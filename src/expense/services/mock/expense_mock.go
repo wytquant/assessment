@@ -14,7 +14,12 @@ func NewExpenseServiceMock() *expenseServiceMock {
 	return &expenseServiceMock{}
 }
 
-func (s *expenseServiceMock) CreateExpense(expenseReq requests.ExpenseRequest) (*responses.ExpenseResponse, error) {
-	args := s.Called()
+func (m *expenseServiceMock) CreateExpense(expenseReq requests.ExpenseRequest) (*responses.ExpenseResponse, error) {
+	args := m.Called()
+	return args.Get(0).(*responses.ExpenseResponse), args.Error(1)
+}
+
+func (m *expenseServiceMock) GetExpenseByID(id string) (*responses.ExpenseResponse, error) {
+	args := m.Called(id)
 	return args.Get(0).(*responses.ExpenseResponse), args.Error(1)
 }

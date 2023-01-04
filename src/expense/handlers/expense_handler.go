@@ -28,10 +28,23 @@ func (h expenseHandler) CreateExpense(c *gin.Context) {
 	if err != nil {
 		appErr, ok := err.(*helpers.AppError)
 		if ok {
-			c.JSON(appErr.StatusCode, appErr.Message)
+			c.JSON(appErr.StatusCode, gin.H{"message": appErr.Message})
 		}
 		return
 	}
 
 	c.JSON(http.StatusCreated, expsResponse)
+}
+
+func (h expenseHandler) GetExpenseByID(c *gin.Context) {
+	expenseResp, err := h.expenseService.GetExpenseByID(c.Param("id"))
+	if err != nil {
+		appErr, ok := err.(*helpers.AppError)
+		if ok {
+			c.JSON(appErr.StatusCode, gin.H{"message": appErr.Message})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, expenseResp)
 }

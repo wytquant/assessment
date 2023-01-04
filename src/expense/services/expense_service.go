@@ -31,3 +31,16 @@ func (s expenseService) CreateExpense(expenseReq requests.ExpenseRequest) (*resp
 
 	return &expenseResp, nil
 }
+
+func (s expenseService) GetExpenseByID(id string) (*responses.ExpenseResponse, error) {
+	var expenseResp responses.ExpenseResponse
+
+	expense, err := s.expenseRepo.GetByID(id)
+	if err != nil {
+		return nil, helpers.NewNotFoundError()
+	}
+
+	copier.Copy(&expenseResp, &expense)
+
+	return &expenseResp, nil
+}

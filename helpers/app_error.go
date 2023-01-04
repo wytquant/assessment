@@ -14,3 +14,7 @@ func (se *AppError) Error() string {
 func NewInternalServerError() error {
 	return &AppError{StatusCode: http.StatusInternalServerError, Message: "internal server error"}
 }
+
+func NewNotFoundError() error {
+	return &AppError{StatusCode: http.StatusNotFound, Message: "record not found"}
+}
