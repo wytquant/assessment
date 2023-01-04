@@ -37,7 +37,7 @@ func (s expenseService) GetExpenseByID(id string) (*responses.ExpenseResponse, e
 
 	expense, err := s.expenseRepo.GetByID(id)
 	if err != nil {
-		return nil, helpers.NewInternalServerError()
+		return nil, helpers.NewNotFoundError()
 	}
 
 	copier.Copy(&expenseResp, &expense)
