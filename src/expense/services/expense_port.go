@@ -7,4 +7,5 @@ import (
 
 type ExpenseService interface {
 	CreateExpense(requests.ExpenseRequest) (*responses.ExpenseResponse, error)
+	GetExpenseById(id string) (*responses.ExpenseResponse, error)
 }

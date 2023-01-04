@@ -35,3 +35,16 @@ func (h expenseHandler) CreateExpense(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, expsResponse)
 }
+
+func (h expenseHandler) GetExpenseById(c *gin.Context) {
+	expenseResp, err := h.expenseService.GetExpenseById(c.Param("id"))
+	if err != nil {
+		appErr, ok := err.(*helpers.AppError)
+		if ok {
+			c.JSON(appErr.StatusCode, appErr.Message)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, expenseResp)
+}
