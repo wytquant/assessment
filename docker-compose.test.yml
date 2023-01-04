@@ -1,0 +1,35 @@
+version: '3.2'
+
+networks:
+  integration-test:
+
+services:
+  it_tests:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.test
+    volumes:
+      - $PWD:/go/src/target
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - integration-test
+  db:
+    image: postgres:12.12
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: go-integration-test-db
+    restart: on-failure
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - integration-test
