@@ -22,7 +22,7 @@ func (r expenseRepositoryDB) Create(expense *models.Expense) error {
 	return nil
 }
 
-func (r expenseRepositoryDB) GetById(id string) (*models.Expense, error) {
+func (r expenseRepositoryDB) GetByID(id string) (*models.Expense, error) {
 	var expense models.Expense
 	query := r.db
 	if err := query.Where("id = $1", id).First(&expense).Error; err != nil {

@@ -37,7 +37,7 @@ func (h expenseHandler) CreateExpense(c *gin.Context) {
 }
 
 func (h expenseHandler) GetExpenseById(c *gin.Context) {
-	expenseResp, err := h.expenseService.GetExpenseById(c.Param("id"))
+	expenseResp, err := h.expenseService.GetExpenseByID(c.Param("id"))
 	if err != nil {
 		appErr, ok := err.(*helpers.AppError)
 		if ok {

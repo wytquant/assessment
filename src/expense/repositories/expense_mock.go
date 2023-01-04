@@ -13,7 +13,7 @@ func NewExpenseReporitoryMock() *expenseRepositoryMock {
 	return &expenseRepositoryMock{}
 }
 
-func (r *expenseRepositoryMock) Create(expense *models.Expense) error {
-	args := r.Called()
+func (m *expenseRepositoryMock) Create(expense *models.Expense) error {
+	args := m.Called()
 	return args.Error(0)
 }
