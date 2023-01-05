@@ -67,3 +67,16 @@ func (h expenseHandler) UpdateExpenseByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, expenseResp)
 }
+
+func (h expenseHandler) GetAllExpenses(c *gin.Context) {
+	expenseResp, err := h.expenseService.GetExpenses()
+	if err != nil {
+		appErr, ok := err.(*helpers.AppError)
+		if ok {
+			c.JSON(appErr.StatusCode, gin.H{"message": appErr.Message})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, expenseResp)
+}

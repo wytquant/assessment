@@ -60,3 +60,16 @@ func (s expenseService) UpdateExpenseByID(id string, expensReq requests.ExpenseR
 
 	return &expenseResp, nil
 }
+
+func (s expenseService) GetExpenses() (*[]responses.ExpenseResponse, error) {
+	expensesResp := []responses.ExpenseResponse{}
+
+	expenses, err := s.expenseRepo.GetAll()
+	if err != nil {
+		return nil, helpers.NewInternalServerError()
+	}
+
+	copier.Copy(&expensesResp, &expenses)
+
+	return &expensesResp, nil
+}

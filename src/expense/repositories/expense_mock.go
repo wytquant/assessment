@@ -27,3 +27,7 @@ func (m *expenseRepositoryMock) UpdateByID(id string, expense models.Expense) (*
 	args := m.Called(id, expense)
 	return args.Get(0).(*models.Expense), args.Error(1)
 }
+
+func (r expenseRepositoryMock) GetAll() (*[]models.Expense, error) {
+	return nil, nil
+}

@@ -45,3 +45,14 @@ func (r expenseRepositoryDB) UpdateByID(id string, expense models.Expense) (*mod
 
 	return expenseDB, nil
 }
+
+func (r expenseRepositoryDB) GetAll() (*[]models.Expense, error) {
+	query := r.db
+	var expenses []models.Expense
+
+	if err := query.Find(&expenses).Error; err != nil {
+		return nil, err
+	}
+
+	return &expenses, nil
+}

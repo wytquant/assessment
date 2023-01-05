@@ -28,3 +28,7 @@ func (m *expenseServiceMock) UpdateExpenseByID(id string, expensReq requests.Exp
 	args := m.Called(id, expensReq)
 	return args.Get(0).(*responses.ExpenseResponse), args.Error(1)
 }
+
+func (m *expenseServiceMock) GetExpenses() (*[]responses.ExpenseResponse, error) {
+	return nil, nil
+}
