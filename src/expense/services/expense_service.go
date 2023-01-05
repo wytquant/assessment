@@ -44,3 +44,19 @@ func (s expenseService) GetExpenseByID(id string) (*responses.ExpenseResponse, e
 
 	return &expenseResp, nil
 }
+
+func (s expenseService) UpdateExpenseByID(id string, expensReq requests.ExpenseRequest) (*responses.ExpenseResponse, error) {
+	var expense models.Expense
+	var expenseResp responses.ExpenseResponse
+
+	copier.Copy(&expense, &expensReq)
+
+	updatedExpense, err := s.expenseRepo.UpdateByID(id, expense)
+	if err != nil {
+		return nil, helpers.NewNotFoundError()
+	}
+
+	copier.Copy(&expenseResp, &updatedExpense)
+
+	return &expenseResp, nil
+}

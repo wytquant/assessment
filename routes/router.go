@@ -17,6 +17,7 @@ func SetupRouter() *gin.Engine {
 
 	r.POST("/expenses", expenseHandler.CreateExpense)
 	r.GET("/expenses/:id", expenseHandler.GetExpenseByID)
+	r.PUT("/expenses/:id", expenseHandler.UpdateExpenseByID)
 
 	return r
 }

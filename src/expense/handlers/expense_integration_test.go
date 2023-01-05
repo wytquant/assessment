@@ -29,7 +29,7 @@ func TestIntegrationCreateExpense(t *testing.T) {
 	//setup server
 	r := gin.Default()
 	go func(r *gin.Engine) {
-		db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
+		db, err := gorm.Open(postgres.Open("postgres://root:root@db/go-integration-test-db?sslmode=disable"), &gorm.Config{})
 		if err != nil {
 			log.Fatalln("fail to connect the database")
 		}

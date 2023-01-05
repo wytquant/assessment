@@ -11,14 +11,11 @@ services:
     volumes:
       - $PWD:/go/src/target
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     networks:
       - integration-test
   db:
     image: postgres:12.12
-    ports:
-      - "5436:5432"
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
@@ -26,10 +23,5 @@ services:
     restart: on-failure
     volumes:
       - ./db:/docker-entrypoint-initdb.d/
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - integration-test

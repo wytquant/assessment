@@ -48,3 +48,22 @@ func (h expenseHandler) GetExpenseByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, expenseResp)
 }
+
+func (h expenseHandler) UpdateExpenseByID(c *gin.Context) {
+	var expenseReq requests.ExpenseRequest
+	if err := c.ShouldBindJSON(&expenseReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	expenseResp, err := h.expenseService.UpdateExpenseByID(c.Param("id"), expenseReq)
+	if err != nil {
+		appErr, ok := err.(*helpers.AppError)
+		if ok {
+			c.JSON(appErr.StatusCode, gin.H{"message": appErr.Message})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, expenseResp)
+}
