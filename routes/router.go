@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/wytquant/assessment/config"
 	"github.com/wytquant/assessment/src/expense/handlers"
@@ -11,14 +13,20 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	repo := repositories.NewExpenseRepositoryDB(config.DB)
-	service := services.NewExpenseService(repo)
-	expenseHandler := handlers.NewExpenseHandler(service)
+	authozired := r.Group("/", gin.BasicAuth(gin.Accounts{
+		os.Getenv("USERNAME"): os.Getenv("PASSWORD"),
+	}))
 
-	r.POST("/expenses", expenseHandler.CreateExpense)
-	r.GET("/expenses/:id", expenseHandler.GetExpenseByID)
-	r.PUT("/expenses/:id", expenseHandler.UpdateExpenseByID)
-	r.GET("/expenses", expenseHandler.GetAllExpenses)
+	{
+		repo := repositories.NewExpenseRepositoryDB(config.DB)
+		service := services.NewExpenseService(repo)
+		expenseHandler := handlers.NewExpenseHandler(service)
+
+		authozired.POST("/expenses", expenseHandler.CreateExpense)
+		authozired.GET("/expenses/:id", expenseHandler.GetExpenseByID)
+		authozired.PUT("/expenses/:id", expenseHandler.UpdateExpenseByID)
+		authozired.GET("/expenses", expenseHandler.GetAllExpenses)
+	}
 
 	return r
 }
