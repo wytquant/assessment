@@ -84,13 +84,95 @@ func TestGetExpenseByIDService(t *testing.T) {
 
 		expenseService := services.NewExpenseService(expenseRepo)
 
+		//act
 		_, err := expenseService.GetExpenseByID(id)
 
+		//assert
 		appErr, ok := err.(*helpers.AppError)
 		if ok {
 			assert.Equal(t, http.StatusNotFound, appErr.StatusCode)
 		}
 		assert.EqualError(t, err, helpers.NewNotFoundError().Error())
 
+	})
+}
+
+func TestUpdateExpenseByIDService(t *testing.T) {
+	t.Run("update success case", func(t *testing.T) {
+		//arrange
+		id := "1"
+		updatedExpense := models.Expense{
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+
+		expenseReq := requests.ExpenseRequest{
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+
+		expenseRepo := repositories.NewExpenseReporitoryMock()
+		expenseRepo.On("UpdateByID", id, updatedExpense).Return(&models.Expense{
+			ID:     1,
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}, nil)
+
+		expenseService := services.NewExpenseService(expenseRepo)
+
+		want := &responses.ExpenseResponse{
+			ID:     1,
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+
+		//act
+		got, err := expenseService.UpdateExpenseByID(id, expenseReq)
+
+		//assert
+		assert.NoError(t, err)
+		if !assert.ObjectsAreEqual(want, got) {
+			t.Errorf("not equal. want: %#v, got: %#v", want, got)
+		}
+	})
+
+	t.Run("fail case bacause expense was not found", func(t *testing.T) {
+		//arrange
+		id := "1"
+		updatedExpense := models.Expense{
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+
+		expenseReq := requests.ExpenseRequest{
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+		expenseRepo := repositories.NewExpenseReporitoryMock()
+		expenseRepo.On("UpdateByID", id, updatedExpense).Return(&models.Expense{}, helpers.NewNotFoundError())
+
+		expenseService := services.NewExpenseService(expenseRepo)
+
+		//act
+		_, err := expenseService.UpdateExpenseByID(id, expenseReq)
+
+		//assert
+		appErr, ok := err.(*helpers.AppError)
+		if ok {
+			assert.Equal(t, http.StatusNotFound, appErr.StatusCode)
+		}
+		assert.EqualError(t, err, helpers.NewNotFoundError().Error())
 	})
 }

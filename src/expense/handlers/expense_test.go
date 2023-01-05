@@ -14,6 +14,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/wytquant/assessment/helpers"
+	"github.com/wytquant/assessment/requests"
 	"github.com/wytquant/assessment/responses"
 	"github.com/wytquant/assessment/src/expense/handlers"
 	services "github.com/wytquant/assessment/src/expense/services/mock"
@@ -140,6 +141,7 @@ func TestGetExpenseByIDHandler(t *testing.T) {
 		var got responses.ExpenseResponse
 		json.NewDecoder(w.Body).Decode(&got)
 
+		//assert
 		assert.Equal(t, http.StatusOK, w.Code)
 		if !assert.ObjectsAreEqual(want, got) {
 			t.Errorf("not equal. want: %#v, got: %#v", want, got)
@@ -165,6 +167,116 @@ func TestGetExpenseByIDHandler(t *testing.T) {
 		//act
 		r.ServeHTTP(w, req)
 
+		//assert
 		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+}
+
+func TestUpdateExpenseByIDHanlder(t *testing.T) {
+	t.Run("update success case", func(t *testing.T) {
+		//arrange
+		id := "1"
+		want := responses.ExpenseResponse{
+			ID:     1,
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+		expenseReq := requests.ExpenseRequest{
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+
+		expenseService := services.NewExpenseServiceMock()
+		expenseService.On("UpdateExpenseByID", id, expenseReq).Return(&want, nil)
+
+		expenseHandler := handlers.NewExpenseHandler(expenseService)
+
+		r := gin.Default()
+		r.PUT("/expenses/:id", expenseHandler.UpdateExpenseByID)
+
+		payload := strings.NewReader(`{
+			"title": "strawberry smoothie",
+			"amount": 79,
+			"note": "night market promotion discount 10 bath", 
+			"tags": ["food", "beverage"]
+		}`)
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/expenses/%s", id), payload)
+
+		//act
+		r.ServeHTTP(w, req)
+		var got responses.ExpenseResponse
+		json.NewDecoder(w.Body).Decode(&got)
+
+		//assert
+		assert.Equal(t, http.StatusOK, w.Code)
+		if !assert.ObjectsAreEqual(want, got) {
+			t.Errorf("not equal. want: %#v, got: %#v", want, got)
+		}
+	})
+
+	t.Run("fail case becuase expense was not found", func(t *testing.T) {
+		//arrange
+		id := "1"
+		expenseReq := requests.ExpenseRequest{
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+
+		expenseService := services.NewExpenseServiceMock()
+		expenseService.On("UpdateExpenseByID", id, expenseReq).Return(&responses.ExpenseResponse{}, helpers.NewNotFoundError())
+
+		expenseHandler := handlers.NewExpenseHandler(expenseService)
+
+		r := gin.Default()
+		r.PUT("/expenses/:id", expenseHandler.UpdateExpenseByID)
+
+		payload := strings.NewReader(`{
+			"title": "strawberry smoothie",
+			"amount": 79,
+			"note": "night market promotion discount 10 bath", 
+			"tags": ["food", "beverage"]
+		}`)
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/expenses/%s", id), payload)
+
+		//act
+		r.ServeHTTP(w, req)
+
+		//assert
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("fail bad request case because leave some json's field blank", func(t *testing.T) {
+		//arrange
+		id := "1"
+		expenseService := services.NewExpenseServiceMock()
+		expenseHandler := handlers.NewExpenseHandler(expenseService)
+
+		r := gin.Default()
+		r.PUT("/expenses/:id", expenseHandler.UpdateExpenseByID)
+
+		payload := strings.NewReader(`{
+			"title": "strawberry smoothie",
+			"amount": 79,
+			"note": "night market promotion discount 10 bath", 
+		}`)
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/expenses/%s", id), payload)
+
+		//act
+		r.ServeHTTP(w, req)
+
+		//assert
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 }
