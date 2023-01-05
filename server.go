@@ -29,7 +29,6 @@ func main() {
 	defer config.CloseDB()
 
 	config.DB.AutoMigrate(&models.Expense{})
-	// defer config.DB.Migrator().DropTable(&models.Expense{})
 
 	//setup routes
 	r := routes.SetupRouter()

@@ -32,7 +32,7 @@ func TestCreateExpenseHandler(t *testing.T) {
 		}
 
 		expenseService := services.NewExpenseServiceMock()
-		expenseService.On("CreateExpense").Return(&want, nil)
+		expenseService.On("CreateExpense").Return(want, nil)
 
 		expenseHandler := handlers.NewExpenseHandler(expenseService)
 
@@ -88,7 +88,7 @@ func TestCreateExpenseHandler(t *testing.T) {
 	t.Run("fail to create expense because internal server error", func(t *testing.T) {
 		//arrange
 		expenseService := services.NewExpenseServiceMock()
-		expenseService.On("CreateExpense").Return(&responses.ExpenseResponse{}, helpers.NewInternalServerError())
+		expenseService.On("CreateExpense").Return(responses.ExpenseResponse{}, helpers.NewInternalServerError())
 
 		expenseHandler := handlers.NewExpenseHandler(expenseService)
 
@@ -126,7 +126,7 @@ func TestGetExpenseByIDHandler(t *testing.T) {
 		}
 
 		expenseService := services.NewExpenseServiceMock()
-		expenseService.On("GetExpenseByID", id).Return(&want, nil)
+		expenseService.On("GetExpenseByID", id).Return(want, nil)
 
 		expenseHandler := handlers.NewExpenseHandler(expenseService)
 
@@ -154,7 +154,7 @@ func TestGetExpenseByIDHandler(t *testing.T) {
 		id := "1"
 
 		expenseService := services.NewExpenseServiceMock()
-		expenseService.On("GetExpenseByID", id).Return(&responses.ExpenseResponse{}, helpers.NewNotFoundError())
+		expenseService.On("GetExpenseByID", id).Return(responses.ExpenseResponse{}, helpers.NewNotFoundError())
 
 		expenseHandler := handlers.NewExpenseHandler(expenseService)
 
@@ -191,7 +191,7 @@ func TestUpdateExpenseByIDHanlder(t *testing.T) {
 		}
 
 		expenseService := services.NewExpenseServiceMock()
-		expenseService.On("UpdateExpenseByID", id, expenseReq).Return(&want, nil)
+		expenseService.On("UpdateExpenseByID", id, expenseReq).Return(want, nil)
 
 		expenseHandler := handlers.NewExpenseHandler(expenseService)
 
@@ -231,7 +231,7 @@ func TestUpdateExpenseByIDHanlder(t *testing.T) {
 		}
 
 		expenseService := services.NewExpenseServiceMock()
-		expenseService.On("UpdateExpenseByID", id, expenseReq).Return(&responses.ExpenseResponse{}, helpers.NewNotFoundError())
+		expenseService.On("UpdateExpenseByID", id, expenseReq).Return(responses.ExpenseResponse{}, helpers.NewNotFoundError())
 
 		expenseHandler := handlers.NewExpenseHandler(expenseService)
 
@@ -278,5 +278,66 @@ func TestUpdateExpenseByIDHanlder(t *testing.T) {
 
 		//assert
 		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+}
+
+func TestGetAllExpensesHandler(t *testing.T) {
+	t.Run("get all success case", func(t *testing.T) {
+		//arrange
+		expenseService := services.NewExpenseServiceMock()
+		expenseService.On("GetExpenses").Return([]responses.ExpenseResponse{
+			{
+				ID:     1,
+				Title:  "strawberry smoothie",
+				Amount: 79,
+				Note:   "night market promotion discount 10 bath",
+				Tags:   pq.StringArray{"food", "beverage"},
+			},
+			{
+				ID:     2,
+				Title:  "strawberry smoothie",
+				Amount: 79,
+				Note:   "night market promotion discount 10 bath",
+				Tags:   pq.StringArray{"food", "beverage"},
+			},
+		}, nil)
+		expenseHandler := handlers.NewExpenseHandler(expenseService)
+
+		r := gin.Default()
+		r.GET("/expenses", expenseHandler.GetAllExpenses)
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/expenses", nil)
+
+		//act
+		r.ServeHTTP(w, req)
+		var got []responses.ExpenseResponse
+		json.NewDecoder(w.Body).Decode(&got)
+
+		//assert
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.NotZero(t, len(got))
+	})
+
+	t.Run("get all fail case because internal server error", func(t *testing.T) {
+		//arrange
+		expenseService := services.NewExpenseServiceMock()
+		expenseService.On("GetExpenses").Return([]responses.ExpenseResponse{}, helpers.NewInternalServerError())
+		expenseHandler := handlers.NewExpenseHandler(expenseService)
+
+		r := gin.Default()
+		r.GET("/expenses", expenseHandler.GetAllExpenses)
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/expenses", nil)
+
+		//act
+		r.ServeHTTP(w, req)
+		var got []responses.ExpenseResponse
+		json.NewDecoder(w.Body).Decode(&got)
+
+		//assert
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.Equal(t, 0, len(got))
 	})
 }
