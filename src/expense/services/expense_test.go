@@ -219,6 +219,10 @@ func TestGetAllExpensesService(t *testing.T) {
 		got, err := expenseService.GetExpenses()
 
 		//assert
+		appErr, ok := err.(*helpers.AppError)
+		if ok {
+			assert.Equal(t, http.StatusInternalServerError, appErr.StatusCode)
+		}
 		assert.EqualError(t, err, helpers.NewInternalServerError().Error())
 		assert.Equal(t, 0, len(got))
 	})
