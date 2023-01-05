@@ -22,31 +22,31 @@ func (r expenseRepositoryDB) Create(expense *models.Expense) error {
 	return nil
 }
 
-func (r expenseRepositoryDB) GetByID(id string) (*models.Expense, error) {
+func (r expenseRepositoryDB) GetByID(id string) (models.Expense, error) {
 	var expense models.Expense
 	query := r.db
 	if err := query.Where("id = $1", id).First(&expense).Error; err != nil {
-		return nil, err
+		return models.Expense{}, err
 	}
 
-	return &expense, nil
+	return expense, nil
 }
 
-func (r expenseRepositoryDB) UpdateByID(id string, expense models.Expense) (*models.Expense, error) {
+func (r expenseRepositoryDB) UpdateByID(id string, expense models.Expense) (models.Expense, error) {
 	query := r.db
 	expenseDB, err := r.GetByID(id)
 	if err != nil {
-		return nil, err
+		return models.Expense{}, err
 	}
 
 	if err := query.Model(&expenseDB).Updates(expense).Error; err != nil {
-		return nil, err
+		return models.Expense{}, err
 	}
 
 	return expenseDB, nil
 }
 
-func (r expenseRepositoryDB) GetAll() (*[]models.Expense, error) {
+func (r expenseRepositoryDB) GetAll() ([]models.Expense, error) {
 	query := r.db
 	var expenses []models.Expense
 
@@ -54,5 +54,5 @@ func (r expenseRepositoryDB) GetAll() (*[]models.Expense, error) {
 		return nil, err
 	}
 
-	return &expenses, nil
+	return expenses, nil
 }

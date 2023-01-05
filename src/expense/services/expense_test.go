@@ -51,7 +51,7 @@ func TestGetExpenseByIDService(t *testing.T) {
 		//arrange
 		id := "1"
 		expenseRepo := repositories.NewExpenseReporitoryMock()
-		expenseRepo.On("GetByID", id).Return(&models.Expense{
+		expenseRepo.On("GetByID", id).Return(models.Expense{
 			ID:     1,
 			Title:  "strawberry smoothie",
 			Amount: 79,
@@ -60,7 +60,7 @@ func TestGetExpenseByIDService(t *testing.T) {
 		}, nil)
 		expenseService := services.NewExpenseService(expenseRepo)
 
-		want := &responses.ExpenseResponse{
+		want := responses.ExpenseResponse{
 			ID:     1,
 			Title:  "strawberry smoothie",
 			Amount: 79,
@@ -80,7 +80,7 @@ func TestGetExpenseByIDService(t *testing.T) {
 		//arrange
 		id := "1"
 		expenseRepo := repositories.NewExpenseReporitoryMock()
-		expenseRepo.On("GetByID", id).Return(&models.Expense{}, helpers.NewNotFoundError())
+		expenseRepo.On("GetByID", id).Return(models.Expense{}, helpers.NewNotFoundError())
 
 		expenseService := services.NewExpenseService(expenseRepo)
 
@@ -116,7 +116,7 @@ func TestUpdateExpenseByIDService(t *testing.T) {
 		}
 
 		expenseRepo := repositories.NewExpenseReporitoryMock()
-		expenseRepo.On("UpdateByID", id, updatedExpense).Return(&models.Expense{
+		expenseRepo.On("UpdateByID", id, updatedExpense).Return(models.Expense{
 			ID:     1,
 			Title:  "strawberry smoothie",
 			Amount: 79,
@@ -126,7 +126,7 @@ func TestUpdateExpenseByIDService(t *testing.T) {
 
 		expenseService := services.NewExpenseService(expenseRepo)
 
-		want := &responses.ExpenseResponse{
+		want := responses.ExpenseResponse{
 			ID:     1,
 			Title:  "strawberry smoothie",
 			Amount: 79,
@@ -161,7 +161,7 @@ func TestUpdateExpenseByIDService(t *testing.T) {
 			Tags:   pq.StringArray{"food", "beverage"},
 		}
 		expenseRepo := repositories.NewExpenseReporitoryMock()
-		expenseRepo.On("UpdateByID", id, updatedExpense).Return(&models.Expense{}, helpers.NewNotFoundError())
+		expenseRepo.On("UpdateByID", id, updatedExpense).Return(models.Expense{}, helpers.NewNotFoundError())
 
 		expenseService := services.NewExpenseService(expenseRepo)
 
@@ -174,5 +174,52 @@ func TestUpdateExpenseByIDService(t *testing.T) {
 			assert.Equal(t, http.StatusNotFound, appErr.StatusCode)
 		}
 		assert.EqualError(t, err, helpers.NewNotFoundError().Error())
+	})
+}
+
+func TestGetAllExpensesService(t *testing.T) {
+	t.Run("get all success case", func(t *testing.T) {
+		//Arrange
+		expenseRepo := repositories.NewExpenseReporitoryMock()
+		expenseRepo.On("GetAll").Return([]models.Expense{
+			{
+				ID:     1,
+				Title:  "strawberry smoothie",
+				Amount: 79,
+				Note:   "night market promotion discount 10 bath",
+				Tags:   pq.StringArray{"food", "beverage"},
+			},
+			{
+				ID:     2,
+				Title:  "strawberry smoothie",
+				Amount: 79,
+				Note:   "night market promotion discount 10 bath",
+				Tags:   pq.StringArray{"food", "beverage"},
+			},
+		}, nil)
+
+		expenseService := services.NewExpenseService(expenseRepo)
+
+		//act
+		got, err := expenseService.GetExpenses()
+
+		//assert
+		assert.NoError(t, err)
+		assert.NotZero(t, len(got))
+	})
+
+	t.Run("get all fail case because internal server error", func(t *testing.T) {
+		//Arrange
+		expenseRepo := repositories.NewExpenseReporitoryMock()
+		expenseRepo.On("GetAll").Return([]models.Expense{}, helpers.NewInternalServerError())
+
+		expenseService := services.NewExpenseService(expenseRepo)
+
+		//act
+		got, err := expenseService.GetExpenses()
+
+		//assert
+		assert.EqualError(t, err, helpers.NewInternalServerError().Error())
+		assert.Equal(t, 0, len(got))
 	})
 }
