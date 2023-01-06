@@ -6,6 +6,7 @@ package handlers_test
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -25,6 +26,21 @@ import (
 )
 
 var serverPort = 2565
+
+func createAndSendReq(httpMethod string, url string, payload io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(httpMethod, url, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+	return resp, err
+}
 
 func TestIntegrationTestServer(t *testing.T) {
 	//setup server
@@ -59,18 +75,8 @@ func TestIntegrationTestServer(t *testing.T) {
 		}
 	}
 	t.Run("get all expense", func(t *testing.T) {
-		//arrange
-		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/expenses", serverPort), nil)
-
-		assert.NoError(t, err)
-
-		req.Header.Set("Content-Type", "application/json")
-		client := &http.Client{
-			Timeout: 10 * time.Second,
-		}
-
-		//act
-		resp, err := client.Do(req)
+		//arrange and act
+		resp, err := createAndSendReq(http.MethodGet, fmt.Sprintf("http://localhost:%d/expenses", serverPort), nil)
 		assert.NoError(t, err)
 
 		var got []responses.ExpenseResponse
@@ -90,17 +96,8 @@ func TestIntegrationTestServer(t *testing.T) {
 		//arrange
 		id := 1
 
-		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/expenses/%d", serverPort, id), nil)
-
-		assert.NoError(t, err)
-
-		req.Header.Set("Content-Type", "application/json")
-		client := &http.Client{
-			Timeout: 10 * time.Second,
-		}
-
 		//act
-		resp, err := client.Do(req)
+		resp, err := createAndSendReq(http.MethodGet, fmt.Sprintf("http://localhost:%d/expenses/%d", serverPort, id), nil)
 		assert.NoError(t, err)
 
 		var got responses.ExpenseResponse
@@ -134,17 +131,8 @@ func TestIntegrationTestServer(t *testing.T) {
 			"tags": ["food", "beverage"]
 		}`)
 
-		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("http://localhost:%d/expenses", serverPort), payload)
-
-		assert.NoError(t, err)
-
-		req.Header.Set("Content-Type", "application/json")
-		client := &http.Client{
-			Timeout: 10 * time.Second,
-		}
-
 		//act
-		resp, err := client.Do(req)
+		resp, err := createAndSendReq(http.MethodPost, fmt.Sprintf("http://localhost:%d/expenses", serverPort), payload)
 		assert.NoError(t, err)
 
 		var got responses.ExpenseResponse
@@ -179,17 +167,8 @@ func TestIntegrationTestServer(t *testing.T) {
 			"tags": ["food"]
 		}`)
 
-		req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("http://localhost:%d/expenses/%d", serverPort, id), payload)
-
-		assert.NoError(t, err)
-
-		req.Header.Set("Content-Type", "application/json")
-		client := &http.Client{
-			Timeout: 10 * time.Second,
-		}
-
 		//act
-		resp, err := client.Do(req)
+		resp, err := createAndSendReq(http.MethodPut, fmt.Sprintf("http://localhost:%d/expenses/%d", serverPort, id), payload)
 		assert.NoError(t, err)
 
 		var got responses.ExpenseResponse
