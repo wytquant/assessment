@@ -9,7 +9,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -25,7 +24,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestIntegrationCreateExpense(t *testing.T) {
+var serverPort = 2565
+
+func TestIntegrationTestServer(t *testing.T) {
 	//setup server
 	r := gin.Default()
 	go func(r *gin.Engine) {
@@ -38,14 +39,17 @@ func TestIntegrationCreateExpense(t *testing.T) {
 		service := services.NewExpenseService(repo)
 		handler := handlers.NewExpenseHandler(service)
 
+		r.GET("/expenses/:id", handler.GetExpenseByID)
+		r.GET("/expenses", handler.GetAllExpenses)
 		r.POST("/expenses", handler.CreateExpense)
+		r.PUT("/expenses/:id", handler.UpdateExpenseByID)
 
-		r.Run(fmt.Sprintf(":%d", 80))
+		r.Run(fmt.Sprintf(":%d", serverPort))
 
 	}(r)
 
 	for {
-		conn, err := net.DialTimeout("tcp", fmt.Sprintf("localhost:%d", 80), 30*time.Second)
+		conn, err := net.DialTimeout("tcp", fmt.Sprintf("localhost:%d", serverPort), 30*time.Second)
 		if err != nil {
 			log.Println(err)
 		}
@@ -54,45 +58,159 @@ func TestIntegrationCreateExpense(t *testing.T) {
 			break
 		}
 	}
+	t.Run("get all expense", func(t *testing.T) {
+		//arrange
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/expenses", serverPort), nil)
 
-	//arrange
-	payload := strings.NewReader(`{
-		"title": "strawberry smoothie",
-		"amount": 79,
-		"note": "night market promotion discount 10 bath", 
-		"tags": ["food", "beverage"]
-	}`)
+		assert.NoError(t, err)
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("http://localhost:%s/expenses", os.Getenv("PORT")), payload)
-	assert.NoError(t, err)
-
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	//act
-	resp, err := client.Do(req)
-	assert.NoError(t, err)
-
-	var got responses.ExpenseResponse
-	err = json.NewDecoder(resp.Body).Decode(&got)
-	assert.NoError(t, err)
-	resp.Body.Close()
-
-	//assertion
-	want := responses.ExpenseResponse{
-		ID:     1,
-		Title:  "strawberry smoothie",
-		Amount: 79,
-		Note:   "night market promotion discount 10 bath",
-		Tags:   pq.StringArray{"food", "beverage"},
-	}
-
-	if assert.NoError(t, err) {
-		assert.Equal(t, http.StatusCreated, resp.StatusCode)
-		if !assert.ObjectsAreEqual(want, got) {
-			t.Errorf("not equal. want: %#v but got: %#v", want, got)
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{
+			Timeout: 10 * time.Second,
 		}
-	}
+
+		//act
+		resp, err := client.Do(req)
+		assert.NoError(t, err)
+
+		var got []responses.ExpenseResponse
+		err = json.NewDecoder(resp.Body).Decode(&got)
+		assert.NoError(t, err)
+		resp.Body.Close()
+
+		//assertion
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+			assert.NotEqual(t, 0, len(got))
+		}
+	})
+
+	t.Run("get expense by id", func(t *testing.T) {
+		//arrange
+		id := 1
+
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/expenses/%d", serverPort, id), nil)
+
+		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{
+			Timeout: 10 * time.Second,
+		}
+
+		//act
+		resp, err := client.Do(req)
+		assert.NoError(t, err)
+
+		var got responses.ExpenseResponse
+		err = json.NewDecoder(resp.Body).Decode(&got)
+		assert.NoError(t, err)
+		resp.Body.Close()
+
+		//assertion
+		want := responses.ExpenseResponse{
+			ID:     1,
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+			if !assert.ObjectsAreEqual(want, got) {
+				t.Errorf("not equal. want: %#v but got: %#v", want, got)
+			}
+		}
+	})
+
+	t.Run("create expense", func(t *testing.T) {
+		//arrange
+		payload := strings.NewReader(`{
+			"title": "strawberry smoothie",
+			"amount": 79,
+			"note": "night market promotion discount 10 bath",
+			"tags": ["food", "beverage"]
+		}`)
+
+		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("http://localhost:%d/expenses", serverPort), payload)
+
+		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{
+			Timeout: 10 * time.Second,
+		}
+
+		//act
+		resp, err := client.Do(req)
+		assert.NoError(t, err)
+
+		var got responses.ExpenseResponse
+		err = json.NewDecoder(resp.Body).Decode(&got)
+		assert.NoError(t, err)
+		resp.Body.Close()
+
+		//assertion
+		want := responses.ExpenseResponse{
+			ID:     2,
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food", "beverage"},
+		}
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, http.StatusCreated, resp.StatusCode)
+			if !assert.ObjectsAreEqual(want, got) {
+				t.Errorf("not equal. want: %#v but got: %#v", want, got)
+			}
+		}
+	})
+
+	t.Run("update expense by id", func(t *testing.T) {
+		//arrange
+		id := 1
+		payload := strings.NewReader(`{
+			"title": "strawberry smoothie",
+			"amount": 100,
+			"note": "night market promotion discount 10 bath",
+			"tags": ["food"]
+		}`)
+
+		req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("http://localhost:%d/expenses/%d", serverPort, id), payload)
+
+		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{
+			Timeout: 10 * time.Second,
+		}
+
+		//act
+		resp, err := client.Do(req)
+		assert.NoError(t, err)
+
+		var got responses.ExpenseResponse
+		err = json.NewDecoder(resp.Body).Decode(&got)
+		assert.NoError(t, err)
+		resp.Body.Close()
+
+		//assertion
+		want := responses.ExpenseResponse{
+			ID:     1,
+			Title:  "strawberry smoothie",
+			Amount: 100,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   pq.StringArray{"food"},
+		}
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+			if !assert.ObjectsAreEqual(want, got) {
+				t.Errorf("not equal. want: %#v but got: %#v", want, got)
+			}
+		}
+	})
 }
