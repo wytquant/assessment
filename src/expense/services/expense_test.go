@@ -17,7 +17,7 @@ import (
 )
 
 func TestCreateExpenseService(t *testing.T) {
-	t.Run("success case", func(t *testing.T) {
+	t.Run("create expense success case", func(t *testing.T) {
 		//Arrange
 		expenseRepo := repositories.NewExpenseReporitoryMock()
 		expenseRepo.On("Create").Return(nil)
@@ -31,7 +31,7 @@ func TestCreateExpenseService(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("fail case", func(t *testing.T) {
+	t.Run("create expense fail case because internal server error", func(t *testing.T) {
 		//Arrange
 		expenseRepo := repositories.NewExpenseReporitoryMock()
 		expenseRepo.On("Create").Return(helpers.NewInternalServerError())
