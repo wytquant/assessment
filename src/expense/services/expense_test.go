@@ -47,7 +47,7 @@ func TestCreateExpenseService(t *testing.T) {
 }
 
 func TestGetExpenseByIDService(t *testing.T) {
-	t.Run("success case", func(t *testing.T) {
+	t.Run("get expense by id success case", func(t *testing.T) {
 		//arrange
 		id := "1"
 		expenseRepo := repositories.NewExpenseReporitoryMock()
@@ -76,7 +76,7 @@ func TestGetExpenseByIDService(t *testing.T) {
 		}
 	})
 
-	t.Run("fail case due to record not found", func(t *testing.T) {
+	t.Run("get expense by id fail case due to record not found", func(t *testing.T) {
 		//arrange
 		id := "1"
 		expenseRepo := repositories.NewExpenseReporitoryMock()
@@ -98,7 +98,7 @@ func TestGetExpenseByIDService(t *testing.T) {
 }
 
 func TestUpdateExpenseByIDService(t *testing.T) {
-	t.Run("update success case", func(t *testing.T) {
+	t.Run("update expense by id success case", func(t *testing.T) {
 		//arrange
 		id := "1"
 		updatedExpense := models.Expense{
@@ -144,7 +144,7 @@ func TestUpdateExpenseByIDService(t *testing.T) {
 		}
 	})
 
-	t.Run("fail case bacause expense was not found", func(t *testing.T) {
+	t.Run("update expense by id fail case bacause expense was not found", func(t *testing.T) {
 		//arrange
 		id := "1"
 		updatedExpense := models.Expense{
@@ -178,7 +178,7 @@ func TestUpdateExpenseByIDService(t *testing.T) {
 }
 
 func TestGetAllExpensesService(t *testing.T) {
-	t.Run("get all success case", func(t *testing.T) {
+	t.Run("get all expenses success case", func(t *testing.T) {
 		//Arrange
 		expenseRepo := repositories.NewExpenseReporitoryMock()
 		expenseRepo.On("GetAll").Return([]models.Expense{
@@ -208,7 +208,7 @@ func TestGetAllExpensesService(t *testing.T) {
 		assert.NotZero(t, len(got))
 	})
 
-	t.Run("get all fail case because internal server error", func(t *testing.T) {
+	t.Run("get all expenses fail case because internal server error", func(t *testing.T) {
 		//Arrange
 		expenseRepo := repositories.NewExpenseReporitoryMock()
 		expenseRepo.On("GetAll").Return([]models.Expense{}, helpers.NewInternalServerError())
