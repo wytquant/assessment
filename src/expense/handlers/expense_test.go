@@ -21,7 +21,7 @@ import (
 )
 
 func TestCreateExpenseHandler(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
+	t.Run("create expense success", func(t *testing.T) {
 		//arrange
 		want := responses.ExpenseResponse{
 			ID:     1,
@@ -61,7 +61,7 @@ func TestCreateExpenseHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("fail bad request because leave some json's field blank", func(t *testing.T) {
+	t.Run("create expense fail bad request because leave some json's field blank", func(t *testing.T) {
 		//arrange
 		expenseService := services.NewExpenseServiceMock()
 		expenseHandler := handlers.NewExpenseHandler(expenseService)
@@ -85,7 +85,7 @@ func TestCreateExpenseHandler(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("fail to create expense because internal server error", func(t *testing.T) {
+	t.Run("create expense fail to create expense because internal server error", func(t *testing.T) {
 		//arrange
 		expenseService := services.NewExpenseServiceMock()
 		expenseService.On("CreateExpense").Return(responses.ExpenseResponse{}, helpers.NewInternalServerError())
@@ -114,7 +114,7 @@ func TestCreateExpenseHandler(t *testing.T) {
 }
 
 func TestGetExpenseByIDHandler(t *testing.T) {
-	t.Run("success case", func(t *testing.T) {
+	t.Run("get expense by id success case", func(t *testing.T) {
 		//arrange
 		id := "1"
 		want := responses.ExpenseResponse{
@@ -149,7 +149,7 @@ func TestGetExpenseByIDHandler(t *testing.T) {
 
 	})
 
-	t.Run("fail case record not found", func(t *testing.T) {
+	t.Run("get expense by id fail case record not found", func(t *testing.T) {
 		//arrange
 		id := "1"
 
@@ -173,7 +173,7 @@ func TestGetExpenseByIDHandler(t *testing.T) {
 }
 
 func TestUpdateExpenseByIDHanlder(t *testing.T) {
-	t.Run("update success case", func(t *testing.T) {
+	t.Run("update expense by id success case", func(t *testing.T) {
 		//arrange
 		id := "1"
 		want := responses.ExpenseResponse{
@@ -220,7 +220,7 @@ func TestUpdateExpenseByIDHanlder(t *testing.T) {
 		}
 	})
 
-	t.Run("fail case becuase expense was not found", func(t *testing.T) {
+	t.Run("update expense by id fail case becuase expense was not found", func(t *testing.T) {
 		//arrange
 		id := "1"
 		expenseReq := requests.ExpenseRequest{
@@ -255,7 +255,7 @@ func TestUpdateExpenseByIDHanlder(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 
-	t.Run("fail bad request case because leave some json's field blank", func(t *testing.T) {
+	t.Run("update expense by id fail bad request case because leave some json's field blank", func(t *testing.T) {
 		//arrange
 		id := "1"
 		expenseService := services.NewExpenseServiceMock()
@@ -282,7 +282,7 @@ func TestUpdateExpenseByIDHanlder(t *testing.T) {
 }
 
 func TestGetAllExpensesHandler(t *testing.T) {
-	t.Run("get all success case", func(t *testing.T) {
+	t.Run("get all expenses success case", func(t *testing.T) {
 		//arrange
 		expenseService := services.NewExpenseServiceMock()
 		expenseService.On("GetExpenses").Return([]responses.ExpenseResponse{
@@ -319,7 +319,7 @@ func TestGetAllExpensesHandler(t *testing.T) {
 		assert.NotZero(t, len(got))
 	})
 
-	t.Run("get all fail case because internal server error", func(t *testing.T) {
+	t.Run("get all expenses fail case because internal server error", func(t *testing.T) {
 		//arrange
 		expenseService := services.NewExpenseServiceMock()
 		expenseService.On("GetExpenses").Return([]responses.ExpenseResponse{}, helpers.NewInternalServerError())
